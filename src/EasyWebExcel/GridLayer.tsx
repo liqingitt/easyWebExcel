@@ -1,7 +1,7 @@
 import { Layer, Line, Rect, Text, Group } from 'react-konva';
 import { GridLayerProps } from './types';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { getIndexCode, getManualColWidthDiffTotal, getManualRowHeightDiffTotal } from './const';
+import { getIndexCode, getManualColWidthDiffTotal, getManualRowHeightDiffTotal, getScrollColIndex, getScrollRowIndex } from './const';
 import Konva from 'konva';
 
 export const GridLayer: React.FC<GridLayerProps> = (props) => {
@@ -34,6 +34,35 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
     return Object.keys(sheet.colWidth).map(Number).sort((a, b) => a - b);
   }, [sheet.colWidth]);
 
+
+  /**
+   * 横向滚动的列数
+   */
+  const horizontalScrollColCount= useMemo(() => {
+    return getScrollColIndex(scrollDistance.horizontal, manualAdjustedColIndexs, sheet);
+  }, [manualAdjustedColIndexs, scrollDistance.horizontal, sheet]);
+
+  /**
+   * 当前窗口最大容纳的列数
+   */
+  const maxColCount = useMemo(() => {
+    return getScrollColIndex(scrollDistance.horizontal + gridLineAreaSize.width, manualAdjustedColIndexs, sheet) - horizontalScrollColCount + 1;
+  }, [scrollDistance.horizontal, gridLineAreaSize.width, manualAdjustedColIndexs, sheet, horizontalScrollColCount]);
+  
+  /**
+   * 纵向滚动的行数
+   */
+  const verticalScrollRowCount = useMemo(() => {
+    return getScrollRowIndex(scrollDistance.vertical, manualAdjustedRowIndexs, sheet);
+  }, [scrollDistance.vertical, manualAdjustedRowIndexs, sheet]);
+
+  /**
+   * 当前窗口最大容纳的行数
+   */
+  const maxRowCount = useMemo(() => {
+    return getScrollRowIndex(scrollDistance.vertical + gridLineAreaSize.height, manualAdjustedRowIndexs, sheet) - verticalScrollRowCount + 1;
+  }, [scrollDistance.vertical, gridLineAreaSize.height, manualAdjustedRowIndexs, sheet, verticalScrollRowCount]);
+
   /**
        * sheet总宽度
        */
@@ -65,16 +94,17 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
   const HorizontalGridLines = useMemo(() => {
     return <Group offsetX={-sheet.defaultIndexColWidth} offsetY={scrollDistance.vertical-sheet.defaultIndexRowHeight} >
       {
-        Array.from({ length: sheet.maxRow }).map((_, index) => {
+        Array.from({ length: maxRowCount }).map((_, index) => {
+          const rowIndex = index + verticalScrollRowCount;
           // 当前行之前所有手动调整过的行高与默认行高差异的和
-          const manualRowHeightDiffTotal = getManualRowHeightDiffTotal(manualAdjustedRowIndexs, sheet, index);
+          const manualRowHeightDiffTotal = getManualRowHeightDiffTotal(manualAdjustedRowIndexs, sheet, rowIndex);
           return <Line
-            key={index}
+            key={rowIndex}
             points={[
               0,
-              sheet.defaultRowHeight * (index+1) + manualRowHeightDiffTotal,
+              sheet.defaultRowHeight * (rowIndex+1) + manualRowHeightDiffTotal,
               size.width,
-              sheet.defaultRowHeight * (index+1) + manualRowHeightDiffTotal
+              sheet.defaultRowHeight * (rowIndex+1) + manualRowHeightDiffTotal
             ]}
             stroke="#ccc"
             strokeWidth={1}
@@ -82,8 +112,9 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
         })
       }
     </Group>
-  }, [manualAdjustedRowIndexs, scrollDistance.vertical, sheet, size.width]);
+  }, [manualAdjustedRowIndexs, maxRowCount, verticalScrollRowCount, scrollDistance.vertical, sheet, size.width]);
 
+  
 
   /**
      * 纵向网格线
@@ -91,15 +122,16 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
   const VerticalGridLines = useMemo(() => {
     return <Group offsetY={-sheet.defaultIndexRowHeight} offsetX={(  scrollDistance.horizontal - sheet.defaultIndexColWidth)} >
       {
-        Array.from({ length: sheet.maxCol }).map((_, index) => {
+        Array.from({ length: maxColCount }).map((_, index) => {
+          const colIndex = index + horizontalScrollColCount;
           // 当前列之前所有手动调整过的列宽与默认列宽差异的和
-          const manualColWidthDiffTotal = getManualColWidthDiffTotal(manualAdjustedColIndexs, sheet, index);
+          const manualColWidthDiffTotal = getManualColWidthDiffTotal(manualAdjustedColIndexs, sheet, colIndex);
           return <Line
-            key={index}
+            key={colIndex}
             points={[
-              sheet.defaultColWidth * (index+1) + manualColWidthDiffTotal,
+              sheet.defaultColWidth * (colIndex+1) + manualColWidthDiffTotal,
               0,
-              sheet.defaultColWidth * (index+1) + manualColWidthDiffTotal,
+              sheet.defaultColWidth * (colIndex+1) + manualColWidthDiffTotal,
               size.height
             ]}
             stroke="#ccc"
@@ -109,7 +141,7 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
       }
     </Group>
 
-  }, [sheet, scrollDistance.horizontal, manualAdjustedColIndexs, size.height]);
+  }, [sheet, scrollDistance.horizontal, maxColCount, horizontalScrollColCount, manualAdjustedColIndexs, size.height]);
 
 
   /**
@@ -127,25 +159,26 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
       />
       <Group offsetX={(scrollDistance.horizontal - sheet.defaultIndexColWidth)}>
         {
-          Array.from({ length: sheet.maxRow }).map((_, index) => {
+          Array.from({ length: maxColCount}).map((_, index) => {
+            const colIndex = index + horizontalScrollColCount;
             // 当前行之前所有手动调整过的列宽与默认列宽差异的和
-            const manualColWidthDiffTotal = getManualColWidthDiffTotal(manualAdjustedColIndexs, sheet, index);
+            const manualColWidthDiffTotal = getManualColWidthDiffTotal(manualAdjustedColIndexs, sheet, colIndex);
             // 当前列宽
-            const colWidth = sheet.colWidth[index] || sheet.defaultColWidth;
-            return <React.Fragment key={index}>
+            const colWidth = sheet.colWidth[colIndex] || sheet.defaultColWidth;
+            return <React.Fragment key={colIndex}>
               <Line
                 points={[
-                  sheet.defaultColWidth * (index+1) + manualColWidthDiffTotal,
+                  sheet.defaultColWidth * (colIndex+1) + manualColWidthDiffTotal,
                   0,
-                  sheet.defaultColWidth * (index+1) + manualColWidthDiffTotal,
+                  sheet.defaultColWidth * (colIndex+1) + manualColWidthDiffTotal,
                   sheet.defaultIndexRowHeight
                 ]}
                 stroke="#ccc"
                 strokeWidth={1}
               />
               <Text
-                text={getIndexCode(index)}
-                x={sheet.defaultColWidth * index + manualColWidthDiffTotal}
+                text={getIndexCode(colIndex)}
+                x={sheet.defaultColWidth * colIndex + manualColWidthDiffTotal}
                 y={0}
                 fontSize={14}
                 width={colWidth}
@@ -157,9 +190,9 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
               {/* 用于线条响应点击事件 */}
               <Rect
                 onClick={() => {
-                  console.log(index);
+                  console.log(colIndex);
                 }}
-                x={sheet.defaultColWidth * (index+1) + manualColWidthDiffTotal}
+                x={sheet.defaultColWidth * colIndex + manualColWidthDiffTotal}
                 y={0}
                 width={8}
                 height={sheet.defaultIndexRowHeight}
@@ -171,7 +204,7 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
         }
       </Group>
     </>
-  }, [manualAdjustedColIndexs, sheet, size.width, scrollDistance.horizontal]);
+  }, [size.width, sheet, scrollDistance.horizontal, maxColCount, horizontalScrollColCount, manualAdjustedColIndexs]);
 
   /**
    * 序号列
@@ -190,32 +223,33 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
       />
       <Group offsetY={scrollDistance.vertical-sheet.defaultIndexRowHeight}>
         {
-          Array.from({ length: sheet.maxRow }).map((_, index) => {
+          Array.from({ length: maxRowCount }).map((_, index) => {
+            const rowIndex = index + verticalScrollRowCount;
             // 当前行之前所有手动调整过的行高与默认行高差异的和
-            const manualRowHeightDiffTotal = getManualRowHeightDiffTotal(manualAdjustedRowIndexs, sheet, index);
+            const manualRowHeightDiffTotal = getManualRowHeightDiffTotal(manualAdjustedRowIndexs, sheet, rowIndex);
             // 当前行高
-            const rowHeight = sheet.rowHeight[index] || sheet.defaultRowHeight;
+            const rowHeight = sheet.rowHeight[rowIndex] || sheet.defaultRowHeight;
 
             return <React.Fragment key={index}>
               <Line
                 onClick={() => {
-                  console.log(index);
+                  console.log(rowIndex);
                     
                 }}
-                key={index}
+                key={rowIndex}
                 points={[
                   0,
-                  sheet.defaultRowHeight * (index+1) + manualRowHeightDiffTotal,
+                  sheet.defaultRowHeight * (rowIndex+1) + manualRowHeightDiffTotal,
                   sheet.defaultIndexColWidth,
-                  sheet.defaultRowHeight * (index+1) + manualRowHeightDiffTotal
+                  sheet.defaultRowHeight * (rowIndex+1) + manualRowHeightDiffTotal
                 ]}
                 stroke="#ccc"
                 strokeWidth={1}
               />
               <Text
-                text={String(index + 1)}
+                text={String(rowIndex + 1)}
                 x={0}
-                y={sheet.defaultRowHeight * index + manualRowHeightDiffTotal}
+                y={sheet.defaultRowHeight * rowIndex + manualRowHeightDiffTotal}
                 fontSize={14}
                 width={sheet.defaultIndexColWidth}
                 height={rowHeight}
@@ -226,10 +260,10 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
               {/* 用于线条响应点击事件 */}
               <Rect
                 onClick={() => {
-                  console.log(index);
+                  console.log(rowIndex);
                 }}
                 x={0}
-                y={sheet.defaultRowHeight * (index+1) + manualRowHeightDiffTotal}
+                y={sheet.defaultRowHeight * (rowIndex+1) + manualRowHeightDiffTotal}
                 width={sheet.defaultIndexColWidth}
                 height={8}
                 // fill="red"
@@ -240,7 +274,7 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
         }
       </Group>
     </>
-  }, [manualAdjustedRowIndexs, scrollDistance.vertical, sheet, size.height]);
+  }, [manualAdjustedRowIndexs, maxRowCount, verticalScrollRowCount, scrollDistance.vertical, sheet, size.height]);
 
   /**
    * 横向滚动条
@@ -306,7 +340,7 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
       }}
       offsetX={-(sheet.defaultIndexColWidth)}
       cornerRadius={6}
-      width={horizontalScrollBarWidth}
+      width={Math.max(horizontalScrollBarWidth, 12)}
       x={horizontalScrollBarScrollDistance}
       y={size.height - 12}
       height={12}
@@ -383,7 +417,7 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
       width={12}
       x={size.width - 12}
       y={verticalScrollBarScrollDistance}
-      height={verticalScrollBarWidth}
+      height={Math.max(verticalScrollBarWidth, 12)}
       fill="#ccc"
       lineCap="round"
       opacity={0.5}
@@ -412,7 +446,7 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
 
     e.preventDefault()
    
-    // 判断滚动方向
+    // 滚动距离
     const deltaX = e.deltaX;
     const deltaY = e.deltaY;
   
@@ -471,11 +505,36 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
   return <Layer 
     ref={layerRef}
   >
-    <Group>
-    {/* 渲染横向网格线 */}
-    {HorizontalGridLines}
-    {/* 渲染纵向网格线 */}
-    {VerticalGridLines}
+    <Group >
+      {/* 渲染横向网格线 */}
+      {HorizontalGridLines}
+      {/* 渲染纵向网格线 */}
+      {VerticalGridLines}
+      {/* 背景层，用于响应点击事件 */}
+      <Rect
+        offsetX={-sheet.defaultIndexColWidth}
+        offsetY={-sheet.defaultIndexRowHeight}
+        x={0}
+        y={0}
+        width={gridLineAreaSize.width}
+        height={gridLineAreaSize.height}
+        onClick={(e) => {
+          const clickX = e.evt.offsetX;
+          const clickY = e.evt.offsetY;
+          
+          // 点击位置相对于网格线区域的坐标
+          const relativeX = clickX - sheet.defaultIndexColWidth;
+          const relativeY = clickY - sheet.defaultIndexRowHeight;
+          
+          //  计算点击的是第几行
+          let rowIndex = Math.floor((scrollDistance.vertical + relativeY) / sheet.defaultRowHeight);
+          //  计算点击的是第几列
+          let colIndex = Math.floor((scrollDistance.horizontal + relativeX) / sheet.defaultColWidth);
+          console.log(rowIndex, colIndex);
+          
+        }}
+        fill="transparent"
+      />
     </Group>
     {/* 渲染序号行 */}
     {IndexRow}

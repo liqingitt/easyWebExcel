@@ -1,0 +1,19 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true,
+        "source.fixAll.stylelint": true
+    },
+    "editor.formatOnSave": false,
+    "eslint.validate": [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact"
+    ],
+    "stylelint.validate": [
+        "css",
+        "less",
+        "scss",
+        "postcss"
+    ]
+}

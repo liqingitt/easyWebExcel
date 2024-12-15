@@ -57,3 +57,104 @@ export const getIndexCode = (index: number): string => {
   
   return code;
 }
+
+/**
+ * 获取滚动列索引
+ * @param scrollNumber 滚动距离
+ * @param manualAdjustedColIndexs 手动调整过的列索引
+ * @param sheet 表格数据
+ * @returns 滚动列索引
+ */
+export const getScrollColIndex = (scrollNumber: number, manualAdjustedColIndexs: number[], sheet: Sheet):number => {
+  // 未滚动
+  if(scrollNumber === 0) return 0;
+
+  // 滚动列数
+  let colCount = 0;
+
+  // 滚动列的偏移量
+  let colOffset = 0;
+
+  for(let i =0;i< manualAdjustedColIndexs.length; i++){
+    // 手动调整过列宽的下标
+    const manualAdjustedColIndex = manualAdjustedColIndexs[i];
+
+
+    // 两个调整过列宽的列之间的间距
+    const colWidthDiff = (manualAdjustedColIndex - colCount) * sheet.defaultColWidth;
+
+    // 如果间距大于等于滚动距离，则说明当前滚动列在这个区间范围内
+    if(colWidthDiff >= scrollNumber){
+      return colCount + Math.floor((scrollNumber - colOffset) / sheet.defaultColWidth) ;
+    }
+
+    colOffset =+ colWidthDiff;
+
+    // 当前调整过列宽的列宽
+    const colWidth = sheet.colWidth[manualAdjustedColIndex];
+    
+    // 如果当前调整过列宽的列宽 加 滚动列的偏移量 大于等于滚动距离，则说明当前调整过列宽的列，便是滚动到的列
+    if((colWidth + colOffset) >= scrollNumber){
+      return manualAdjustedColIndex;
+    }
+    
+    colOffset += colWidth;
+
+    // 更新滚动列数
+    colCount = manualAdjustedColIndex;
+  }
+
+  // 所有调整过列宽的列都便利完了，剩下的都是未调整过列宽的列
+  // 用滚动距离减去 当前滚动列的偏移量，然后除以默认列宽，得到滚动列数
+  return colCount + Math.floor((scrollNumber - colOffset) / sheet.defaultColWidth);
+}
+
+/**
+ * 获取滚动行索引
+ * @param scrollNumber 滚动距离
+ * @param manualAdjustedRowIndexs 手动调整过的行索引
+ * @param sheet 表格数据
+ * @returns 滚动行索引
+ */
+export const getScrollRowIndex = (scrollNumber: number, manualAdjustedRowIndexs: number[], sheet: Sheet):number => {
+  // 未滚动
+  if(scrollNumber === 0) return 0;
+
+  // 滚动行数
+  let rowCount = 0;
+
+  // 滚动行的偏移量 
+  let rowOffset = 0;
+
+  for(let i = 0; i < manualAdjustedRowIndexs.length; i++) {
+    // 手动调整过行高的下标
+    const manualAdjustedRowIndex = manualAdjustedRowIndexs[i];
+
+    // 两个调整过行高的行之间的间距
+    const rowHeightDiff = (manualAdjustedRowIndex - rowCount) * sheet.defaultRowHeight;
+
+    // 如果间距大于等于滚动距离，则说明当前滚动行在这个区间范围内
+    if(rowHeightDiff >= scrollNumber) {
+      return rowCount + Math.floor((scrollNumber - rowOffset) / sheet.defaultRowHeight);
+    }
+
+    rowOffset += rowHeightDiff;
+
+    // 当前调整过行高的行高
+    const rowHeight = sheet.rowHeight[manualAdjustedRowIndex];
+
+    // 如果当前调整过行高的行高 加 滚动行的偏移量 大于等于滚动距离，则说明当前调整过行高的行，便是滚动到的行
+    if((rowHeight + rowOffset) >= scrollNumber) {
+      return manualAdjustedRowIndex;
+    }
+
+    rowOffset += rowHeight;
+
+    // 更新滚动行数
+    rowCount = manualAdjustedRowIndex;
+  }
+
+  // 所有调整过行高的行都遍历完了，剩下的都是未调整过行高的行
+  // 用滚动距离减去 当前滚动行的偏移量，然后除以默认行高，得到滚动行数
+  return rowCount + Math.floor((scrollNumber - rowOffset) / sheet.defaultRowHeight);
+}

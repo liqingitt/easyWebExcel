@@ -4,17 +4,23 @@ import { GridLayer } from './GridLayer';
 import { Sheet } from './sheetTypes';
 import { useState } from 'react';
 import React from 'react';
+// TODO: 改变行高列宽渲染出问题
+// TODO: 滚动条最小时，滚到到极限时会超出
 const sheet: Sheet = {
   id: '1',
   name: 'Sheet1',
-  maxRow: 100,
-  maxCol: 100,
-  cells: {},
+  maxRow: 10000,
+  maxCol: 10000,
+  cells: {
+  
+  },
   rowHeight: {
-    // 0: 30,
+    // 0: 100,
   },
   colWidth: {
-    // 0: 70,
+    // 2:100,
+    // 10:300,
+    // 100:1000,
   },
   defaultRowHeight: 25,
   defaultColWidth: 100,
@@ -22,7 +28,7 @@ const sheet: Sheet = {
   defaultIndexColWidth: 50,
 }
 
- const EasyWebExcel: React.FC<EasyWebExcelProps> = (props) => {
+const EasyWebExcel: React.FC<EasyWebExcelProps> = (props) => {
   const { size } = props;
 
   /**
