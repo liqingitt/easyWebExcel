@@ -98,13 +98,15 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
           const rowIndex = index + verticalScrollRowCount;
           // 当前行之前所有手动调整过的行高与默认行高差异的和
           const manualRowHeightDiffTotal = getManualRowHeightDiffTotal(manualAdjustedRowIndexs, sheet, rowIndex);
+          // 当前行行高
+          const rowHeight = sheet.rowHeight[rowIndex] || sheet.defaultRowHeight;
           return <Line
             key={rowIndex}
             points={[
               0,
-              sheet.defaultRowHeight * (rowIndex+1) + manualRowHeightDiffTotal,
+              sheet.defaultRowHeight * (rowIndex) + manualRowHeightDiffTotal + rowHeight,
               size.width,
-              sheet.defaultRowHeight * (rowIndex+1) + manualRowHeightDiffTotal
+              sheet.defaultRowHeight * (rowIndex) + manualRowHeightDiffTotal + rowHeight  
             ]}
             stroke="#ccc"
             strokeWidth={1}
@@ -126,12 +128,15 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
           const colIndex = index + horizontalScrollColCount;
           // 当前列之前所有手动调整过的列宽与默认列宽差异的和
           const manualColWidthDiffTotal = getManualColWidthDiffTotal(manualAdjustedColIndexs, sheet, colIndex);
+          // 当前列列宽
+          const colWidth = sheet.colWidth[colIndex] || sheet.defaultColWidth;
+          console.log(colWidth)
           return <Line
             key={colIndex}
             points={[
-              sheet.defaultColWidth * (colIndex+1) + manualColWidthDiffTotal,
+              sheet.defaultColWidth * (colIndex) + manualColWidthDiffTotal + colWidth,
               0,
-              sheet.defaultColWidth * (colIndex+1) + manualColWidthDiffTotal,
+              sheet.defaultColWidth * (colIndex) + manualColWidthDiffTotal + colWidth,
               size.height
             ]}
             stroke="#ccc"
@@ -168,9 +173,9 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
             return <React.Fragment key={colIndex}>
               <Line
                 points={[
-                  sheet.defaultColWidth * (colIndex+1) + manualColWidthDiffTotal,
+                  sheet.defaultColWidth * (colIndex) + manualColWidthDiffTotal + colWidth,
                   0,
-                  sheet.defaultColWidth * (colIndex+1) + manualColWidthDiffTotal,
+                  sheet.defaultColWidth * (colIndex) + manualColWidthDiffTotal + colWidth,
                   sheet.defaultIndexRowHeight
                 ]}
                 stroke="#ccc"
@@ -239,9 +244,9 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
                 key={rowIndex}
                 points={[
                   0,
-                  sheet.defaultRowHeight * (rowIndex+1) + manualRowHeightDiffTotal,
+                  sheet.defaultRowHeight * (rowIndex) + manualRowHeightDiffTotal + rowHeight,
                   sheet.defaultIndexColWidth,
-                  sheet.defaultRowHeight * (rowIndex+1) + manualRowHeightDiffTotal
+                  sheet.defaultRowHeight * (rowIndex) + manualRowHeightDiffTotal + rowHeight
                 ]}
                 stroke="#ccc"
                 strokeWidth={1}
