@@ -17,6 +17,7 @@ features:
   - title: '!'
     emoji: 🚀
     description: Put ! description here
+sidebar: false
 ---
 
 easyWebExcel
