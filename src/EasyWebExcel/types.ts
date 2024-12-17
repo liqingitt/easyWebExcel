@@ -1,7 +1,7 @@
 import { Sheet } from './sheetTypes';
 
 export interface EasyWebExcelProps {
-    size: {
+    size?: {
         width: number;
         height: number;
     }
