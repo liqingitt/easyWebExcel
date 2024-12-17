@@ -45,8 +45,8 @@
     ]
   },
   "dependencies": {
-    "konva": "^8.0.1",
-    "react-konva": "^18.1.0",
+    "konva": "8.0.1",
+    "react-konva": "18.1.0",
     "uuid": "^11.0.3"
   },
   "devDependencies": {
@@ -55,6 +55,7 @@
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
     "@umijs/lint": "^4.0.0",
+    "ahooks": "^3.8.4",
     "dumi": "^2.4.13",
     "eslint": "^8.23.0",
     "father": "^4.1.0",
@@ -66,7 +67,7 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "stylelint": "^14.9.1",
-    "ahooks": "^3.8.4"
+    "worker-loader": "^3.0.8"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

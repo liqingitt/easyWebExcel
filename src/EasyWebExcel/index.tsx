@@ -2,7 +2,7 @@ import { Stage } from 'react-konva';
 import { EasyWebExcelProps } from './types';
 import { GridLayer } from './GridLayer';
 import { Sheet } from './sheetTypes';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import React from 'react';
 // TODO: 改变行高列宽渲染出问题
 // TODO: 滚动条最小时，滚到到极限时会超出
@@ -40,10 +40,21 @@ const EasyWebExcel: React.FC<EasyWebExcelProps> = (props) => {
   });
 
 
+  useEffect(() => {
+    
+    const worker = new Worker(new URL('./calcColPositionWork',import.meta.url));
+    worker.onmessage = (event) => {
+      console.log(event.data);
+    }
+  }, []);
+
 
   if (!size) {
     return null;
   }
+
+ 
+
   return <Stage width={size.width} height={size.height}>
     <GridLayer
       sheet={sheet}

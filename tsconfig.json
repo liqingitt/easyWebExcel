@@ -4,6 +4,8 @@
     "declaration": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "jsx": "react",
     "baseUrl": "./",
     "paths": {
