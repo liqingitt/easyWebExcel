@@ -11,7 +11,14 @@ import {
 import { GridLayerProps } from './types';
 
 export const GridLayer: React.FC<GridLayerProps> = (props) => {
-  const { sheet, size, scrollDistance, setScrollDistance } = props;
+  const {
+    sheet,
+    size,
+    scrollDistance,
+    setScrollDistance,
+    colPositionRef,
+    rowPositionRef,
+  } = props;
 
   const layerRef = useRef<Konva.Layer>(null);
 
@@ -54,10 +61,17 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
   const horizontalScrollColCount = useMemo(() => {
     return getScrollColIndex(
       scrollDistance.horizontal,
+      colPositionRef.current,
       manualAdjustedColIndexs,
       sheet,
     );
-  }, [manualAdjustedColIndexs, scrollDistance.horizontal, sheet]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    colPositionRef.current,
+    manualAdjustedColIndexs,
+    scrollDistance.horizontal,
+    sheet,
+  ]);
 
   /**
    * 当前窗口最大容纳的列数
@@ -66,15 +80,18 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
     return (
       getScrollColIndex(
         scrollDistance.horizontal + gridLineAreaSize.width,
+        colPositionRef.current,
         manualAdjustedColIndexs,
         sheet,
       ) -
       horizontalScrollColCount +
       1
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     scrollDistance.horizontal,
     gridLineAreaSize.width,
+    colPositionRef.current,
     manualAdjustedColIndexs,
     sheet,
     horizontalScrollColCount,
@@ -86,10 +103,17 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
   const verticalScrollRowCount = useMemo(() => {
     return getScrollRowIndex(
       scrollDistance.vertical,
+      rowPositionRef.current,
       manualAdjustedRowIndexs,
       sheet,
     );
-  }, [scrollDistance.vertical, manualAdjustedRowIndexs, sheet]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    scrollDistance.vertical,
+    rowPositionRef.current,
+    manualAdjustedRowIndexs,
+    sheet,
+  ]);
 
   /**
    * 当前窗口最大容纳的行数
@@ -98,15 +122,18 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
     return (
       getScrollRowIndex(
         scrollDistance.vertical + gridLineAreaSize.height,
+        rowPositionRef.current,
         manualAdjustedRowIndexs,
         sheet,
       ) -
       verticalScrollRowCount +
       1
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     scrollDistance.vertical,
     gridLineAreaSize.height,
+    rowPositionRef.current,
     manualAdjustedRowIndexs,
     sheet,
     verticalScrollRowCount,
@@ -153,26 +180,35 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
       >
         {Array.from({ length: maxRowCount }).map((_, index) => {
           const rowIndex = index + verticalScrollRowCount;
-          // 当前行之前所有手动调整过的行高与默认行高差异的和
-          const manualRowHeightDiffTotal = getManualRowHeightDiffTotal(
-            manualAdjustedRowIndexs,
-            sheet,
-            rowIndex,
-          );
+
           // 当前行行高
           const rowHeight = sheet.rowHeight[rowIndex] || sheet.defaultRowHeight;
+
+          // 从行位置数组中获取当前行的行位置
+          let rowPosition = rowPositionRef.current[rowIndex];
+
+          // 如果缓存中找不到当前行的行位置，则需要计算
+          if (typeof rowPosition !== 'number') {
+            console.log('rowPosition我没命中优化');
+            // 当前行之前所有手动调整过的行高与默认行高差异的和
+            const manualRowHeightDiffTotal = getManualRowHeightDiffTotal(
+              manualAdjustedRowIndexs,
+              sheet,
+              rowIndex,
+            );
+            rowPosition =
+              sheet.defaultRowHeight * rowIndex + manualRowHeightDiffTotal;
+          }
+
           return (
             <Line
               key={rowIndex}
               points={[
                 0,
-                sheet.defaultRowHeight * rowIndex +
-                  manualRowHeightDiffTotal +
-                  rowHeight,
+                rowPosition + rowHeight,
                 size.width,
-                sheet.defaultRowHeight * rowIndex +
-                  manualRowHeightDiffTotal +
-                  rowHeight,
+                rowPosition + rowHeight,
+                rowHeight,
               ]}
               stroke="#ccc"
               strokeWidth={1}
@@ -182,12 +218,13 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
       </Group>
     );
   }, [
-    manualAdjustedRowIndexs,
+    sheet,
+    scrollDistance.vertical,
     maxRowCount,
     verticalScrollRowCount,
-    scrollDistance.vertical,
-    sheet,
+    rowPositionRef,
     size.width,
+    manualAdjustedRowIndexs,
   ]);
 
   /**
@@ -201,25 +238,33 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
       >
         {Array.from({ length: maxColCount }).map((_, index) => {
           const colIndex = index + horizontalScrollColCount;
-          // 当前列之前所有手动调整过的列宽与默认列宽差异的和
-          const manualColWidthDiffTotal = getManualColWidthDiffTotal(
-            manualAdjustedColIndexs,
-            sheet,
-            colIndex,
-          );
           // 当前列列宽
           const colWidth = sheet.colWidth[colIndex] || sheet.defaultColWidth;
+
+          // 从列位置数组中获取当前列的行位置
+          let colPosition = colPositionRef.current[colIndex];
+
+          // 如果缓存中找不到当前列的行位置，则需要计算
+          if (typeof colPosition !== 'number') {
+            console.log('colPosition我没命中优化');
+
+            // 当前列之前所有手动调整过的列宽与默认列宽差异的和
+            const manualColWidthDiffTotal = getManualColWidthDiffTotal(
+              manualAdjustedColIndexs,
+              sheet,
+              colIndex,
+            );
+            colPosition =
+              sheet.defaultColWidth * colIndex + manualColWidthDiffTotal;
+          }
+
           return (
             <Line
               key={colIndex}
               points={[
-                sheet.defaultColWidth * colIndex +
-                  manualColWidthDiffTotal +
-                  colWidth,
+                colPosition + colWidth,
                 0,
-                sheet.defaultColWidth * colIndex +
-                  manualColWidthDiffTotal +
-                  colWidth,
+                colPosition + colWidth,
                 size.height,
               ]}
               stroke="#ccc"
@@ -229,13 +274,15 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
         })}
       </Group>
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     sheet,
     scrollDistance.horizontal,
     maxColCount,
     horizontalScrollColCount,
-    manualAdjustedColIndexs,
+    colPositionRef.current,
     size.height,
+    manualAdjustedColIndexs,
   ]);
 
   /**
@@ -256,25 +303,31 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
         <Group offsetX={scrollDistance.horizontal - sheet.defaultIndexColWidth}>
           {Array.from({ length: maxColCount }).map((_, index) => {
             const colIndex = index + horizontalScrollColCount;
-            // 当前行之前所有手动调整过的列宽与默认列宽差异的和
-            const manualColWidthDiffTotal = getManualColWidthDiffTotal(
-              manualAdjustedColIndexs,
-              sheet,
-              colIndex,
-            );
+
+            // 从列位置数组中获取当前列的行位置
+            let colPosition = colPositionRef.current[colIndex];
+
             // 当前列宽
             const colWidth = sheet.colWidth[colIndex] || sheet.defaultColWidth;
+            // 如果缓存中找不到当前列的行位置，则需要计算
+            if (typeof colPosition !== 'number') {
+              console.log('colPosition我没命中优化');
+              // 当前行之前所有手动调整过的列宽与默认列宽差异的和
+              const manualColWidthDiffTotal = getManualColWidthDiffTotal(
+                manualAdjustedColIndexs,
+                sheet,
+                colIndex,
+              );
+              colPosition =
+                sheet.defaultColWidth * colIndex + manualColWidthDiffTotal;
+            }
             return (
               <React.Fragment key={colIndex}>
                 <Line
                   points={[
-                    sheet.defaultColWidth * colIndex +
-                      manualColWidthDiffTotal +
-                      colWidth,
+                    colPosition + colWidth,
                     0,
-                    sheet.defaultColWidth * colIndex +
-                      manualColWidthDiffTotal +
-                      colWidth,
+                    colPosition + colWidth,
                     sheet.defaultIndexRowHeight,
                   ]}
                   stroke="#ccc"
@@ -282,7 +335,7 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
                 />
                 <Text
                   text={getIndexCode(colIndex)}
-                  x={sheet.defaultColWidth * colIndex + manualColWidthDiffTotal}
+                  x={colPosition}
                   y={0}
                   fontSize={14}
                   width={colWidth}
@@ -296,11 +349,10 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
                   onClick={() => {
                     console.log(colIndex);
                   }}
-                  x={sheet.defaultColWidth * colIndex + manualColWidthDiffTotal}
+                  x={colPosition + colWidth}
                   y={0}
                   width={8}
                   height={sheet.defaultIndexRowHeight}
-                  // fill="red"
                   offsetX={8 / 2}
                 />
               </React.Fragment>
@@ -309,12 +361,14 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
         </Group>
       </>
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     size.width,
     sheet,
     scrollDistance.horizontal,
     maxColCount,
     horizontalScrollColCount,
+    colPositionRef.current,
     manualAdjustedColIndexs,
   ]);
 
@@ -339,15 +393,25 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
         <Group offsetY={scrollDistance.vertical - sheet.defaultIndexRowHeight}>
           {Array.from({ length: maxRowCount }).map((_, index) => {
             const rowIndex = index + verticalScrollRowCount;
-            // 当前行之前所有手动调整过的行高与默认行高差异的和
-            const manualRowHeightDiffTotal = getManualRowHeightDiffTotal(
-              manualAdjustedRowIndexs,
-              sheet,
-              rowIndex,
-            );
             // 当前行高
             const rowHeight =
               sheet.rowHeight[rowIndex] || sheet.defaultRowHeight;
+
+            // 从行位置数组中获取当前行的行位置
+            let rowPosition = rowPositionRef.current[rowIndex];
+
+            // 如果缓存中找不到当前行的行位置，则需要计算
+            if (typeof rowPosition !== 'number') {
+              console.log('rowPosition我没命中优化');
+              // 当前行之前所有手动调整过的行高与默认行高差异的和
+              const manualRowHeightDiffTotal = getManualRowHeightDiffTotal(
+                manualAdjustedRowIndexs,
+                sheet,
+                rowIndex,
+              );
+              rowPosition =
+                sheet.defaultRowHeight * rowIndex + manualRowHeightDiffTotal;
+            }
 
             return (
               <React.Fragment key={index}>
@@ -358,13 +422,9 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
                   key={rowIndex}
                   points={[
                     0,
-                    sheet.defaultRowHeight * rowIndex +
-                      manualRowHeightDiffTotal +
-                      rowHeight,
+                    rowPosition + rowHeight,
                     sheet.defaultIndexColWidth,
-                    sheet.defaultRowHeight * rowIndex +
-                      manualRowHeightDiffTotal +
-                      rowHeight,
+                    rowPosition + rowHeight,
                   ]}
                   stroke="#ccc"
                   strokeWidth={1}
@@ -372,9 +432,7 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
                 <Text
                   text={String(rowIndex + 1)}
                   x={0}
-                  y={
-                    sheet.defaultRowHeight * rowIndex + manualRowHeightDiffTotal
-                  }
+                  y={rowPosition}
                   fontSize={14}
                   width={sheet.defaultIndexColWidth}
                   height={rowHeight}
@@ -388,10 +446,7 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
                     console.log(rowIndex);
                   }}
                   x={0}
-                  y={
-                    sheet.defaultRowHeight * (rowIndex + 1) +
-                    manualRowHeightDiffTotal
-                  }
+                  y={rowPosition}
                   width={sheet.defaultIndexColWidth}
                   height={8}
                   // fill="red"
@@ -403,13 +458,15 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
         </Group>
       </>
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    manualAdjustedRowIndexs,
-    maxRowCount,
-    verticalScrollRowCount,
-    scrollDistance.vertical,
     sheet,
     size.height,
+    scrollDistance.vertical,
+    maxRowCount,
+    verticalScrollRowCount,
+    rowPositionRef.current,
+    manualAdjustedRowIndexs,
   ]);
 
   /**

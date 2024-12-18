@@ -7,11 +7,11 @@ import { Sheet } from './sheetTypes';
 let currentCalcUuid = '';
 
 /**
- * 计算列位置
+ * 计算行位置
  * @param data
  */
-const calcColPosition = (data: Sheet, uuid: string) => {
-  const { maxCol, colWidth, defaultColWidth } = data;
+const calcRowPosition = (data: Sheet, uuid: string) => {
+  const { maxRow, rowHeight, defaultRowHeight } = data;
 
   let bufferArray: number[] = [];
 
@@ -20,17 +20,17 @@ const calcColPosition = (data: Sheet, uuid: string) => {
    */
   let lastColPosition: number | null = null;
 
-  for (let i = 0; i < maxCol; i++) {
+  for (let i = 0; i < maxRow; i++) {
     // 上一列位置存在
     if (lastColPosition !== null) {
       // 上一列位置存在，计算当前列位置
       const currentColPosition: number =
-        lastColPosition + (colWidth[i - 1] || defaultColWidth);
+        lastColPosition + (rowHeight[i - 1] || defaultRowHeight);
       bufferArray.push(currentColPosition);
       lastColPosition = currentColPosition;
     } else {
       // 上一列位置不存在，计算当前列位置
-      const manualAdjustedColIndexs: number[] = Object.keys(colWidth)
+      const manualAdjustedColIndexs: number[] = Object.keys(rowHeight)
         .map(Number)
         .sort((a, b) => a - b);
       const manualColWidthDiffTotal = getManualColWidthDiffTotal(
@@ -40,7 +40,7 @@ const calcColPosition = (data: Sheet, uuid: string) => {
       );
 
       const currentColPosition: number =
-        i * defaultColWidth + manualColWidthDiffTotal;
+        i * defaultRowHeight + manualColWidthDiffTotal;
       bufferArray.push(currentColPosition);
       lastColPosition = currentColPosition;
     }
@@ -56,7 +56,6 @@ const calcColPosition = (data: Sheet, uuid: string) => {
       bufferArray = [];
     }
   }
-
   if (currentCalcUuid === uuid) {
     self.postMessage(bufferArray);
   }
@@ -65,5 +64,5 @@ const calcColPosition = (data: Sheet, uuid: string) => {
 self.onmessage = (event) => {
   const { data } = event;
   currentCalcUuid = uuidv4();
-  calcColPosition(data, currentCalcUuid);
+  calcRowPosition(data, currentCalcUuid);
 };
