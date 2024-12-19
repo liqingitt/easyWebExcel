@@ -7,8 +7,8 @@ import {
   getManualRowHeightDiffTotal,
   getScrollColIndex,
   getScrollRowIndex,
-} from './const';
-import { GridLayerProps } from './types';
+} from '../const';
+import { GridLayerProps } from '../types';
 
 export const GridLayer: React.FC<GridLayerProps> = (props) => {
   const {
@@ -18,126 +18,17 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
     setScrollDistance,
     colPositionRef,
     rowPositionRef,
+    setSelection,
+    maxRowCount,
+    maxColCount,
+    gridLineAreaSize,
+    manualAdjustedRowIndexs,
+    manualAdjustedColIndexs,
+    verticalScrollRowCount,
+    horizontalScrollColCount,
   } = props;
 
   const layerRef = useRef<Konva.Layer>(null);
-
-  /**
-   * 网格线区域总宽高
-   */
-  const gridLineAreaSize = useMemo(() => {
-    return {
-      width: size.width - sheet.defaultIndexColWidth,
-      height: size.height - sheet.defaultIndexRowHeight,
-    };
-  }, [
-    sheet.defaultIndexColWidth,
-    sheet.defaultIndexRowHeight,
-    size.height,
-    size.width,
-  ]);
-
-  /**
-   * 手动调整过行高的行索引，升序排列
-   */
-  const manualAdjustedRowIndexs: number[] = useMemo(() => {
-    return Object.keys(sheet.rowHeight)
-      .map(Number)
-      .sort((a, b) => a - b);
-  }, [sheet.rowHeight]);
-
-  /**
-   * 手动调整过列宽的列索引，升序排列
-   */
-  const manualAdjustedColIndexs: number[] = useMemo(() => {
-    return Object.keys(sheet.colWidth)
-      .map(Number)
-      .sort((a, b) => a - b);
-  }, [sheet.colWidth]);
-
-  /**
-   * 横向滚动的列数
-   */
-  const horizontalScrollColCount = useMemo(() => {
-    return getScrollColIndex(
-      scrollDistance.horizontal,
-      colPositionRef.current,
-      manualAdjustedColIndexs,
-      sheet,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    colPositionRef.current,
-    manualAdjustedColIndexs,
-    scrollDistance.horizontal,
-    sheet,
-  ]);
-
-  /**
-   * 当前窗口最大容纳的列数
-   */
-  const maxColCount = useMemo(() => {
-    return (
-      getScrollColIndex(
-        scrollDistance.horizontal + gridLineAreaSize.width,
-        colPositionRef.current,
-        manualAdjustedColIndexs,
-        sheet,
-      ) -
-      horizontalScrollColCount +
-      1
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    scrollDistance.horizontal,
-    gridLineAreaSize.width,
-    colPositionRef.current,
-    manualAdjustedColIndexs,
-    sheet,
-    horizontalScrollColCount,
-  ]);
-
-  /**
-   * 纵向滚动的行数
-   */
-  const verticalScrollRowCount = useMemo(() => {
-    return getScrollRowIndex(
-      scrollDistance.vertical,
-      rowPositionRef.current,
-      manualAdjustedRowIndexs,
-      sheet,
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    scrollDistance.vertical,
-    rowPositionRef.current,
-    manualAdjustedRowIndexs,
-    sheet,
-  ]);
-
-  /**
-   * 当前窗口最大容纳的行数
-   */
-  const maxRowCount = useMemo(() => {
-    return (
-      getScrollRowIndex(
-        scrollDistance.vertical + gridLineAreaSize.height,
-        rowPositionRef.current,
-        manualAdjustedRowIndexs,
-        sheet,
-      ) -
-      verticalScrollRowCount +
-      1
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    scrollDistance.vertical,
-    gridLineAreaSize.height,
-    rowPositionRef.current,
-    manualAdjustedRowIndexs,
-    sheet,
-    verticalScrollRowCount,
-  ]);
 
   /**
    * sheet总宽度
@@ -246,8 +137,6 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
 
           // 如果缓存中找不到当前列的行位置，则需要计算
           if (typeof colPosition !== 'number') {
-            console.log('colPosition我没命中优化');
-
             // 当前列之前所有手动调整过的列宽与默认列宽差异的和
             const manualColWidthDiffTotal = getManualColWidthDiffTotal(
               manualAdjustedColIndexs,
@@ -311,7 +200,6 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
             const colWidth = sheet.colWidth[colIndex] || sheet.defaultColWidth;
             // 如果缓存中找不到当前列的行位置，则需要计算
             if (typeof colPosition !== 'number') {
-              console.log('colPosition我没命中优化');
               // 当前行之前所有手动调整过的列宽与默认列宽差异的和
               const manualColWidthDiffTotal = getManualColWidthDiffTotal(
                 manualAdjustedColIndexs,
@@ -796,7 +684,16 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
               manualAdjustedColIndexs,
               sheet,
             );
-            console.log(rowIndex, colIndex);
+            setSelection({
+              start: {
+                row: rowIndex,
+                col: colIndex,
+              },
+              end: {
+                row: rowIndex,
+                col: colIndex,
+              },
+            });
           }}
           fill="transparent"
         />

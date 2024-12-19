@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { getManualColWidthDiffTotal } from './const';
-import { Sheet } from './sheetTypes';
+import { getManualColWidthDiffTotal } from '../const';
+import { Sheet } from '../sheetTypes';
 /**
  * 当前计算的uuid
  */
