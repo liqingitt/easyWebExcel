@@ -10,8 +10,8 @@
     "baseUrl": "./",
     "paths": {
       "@@/*": [".dumi/tmp/*"],
-      "easyWebExcel": ["src"],
-      "easyWebExcel/*": ["src/*", "*"]
+      "@liqingitt-fe/easy-web-excel": ["src"],
+      "@liqingitt-fe/easy-web-excel/*": ["src/*", "*"]
     }
   },
   "include": [".dumirc.ts", "src/**/*"]

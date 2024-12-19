@@ -3,13 +3,12 @@ import { Stage } from 'react-konva';
 import { GridLayer } from './GridLayer';
 import { Sheet } from './sheetTypes';
 import { EasyWebExcelProps } from './types';
-// TODO: 极限列展示异常
-// TODO: 滚动条无法让页面滚动到底
+
 const sheetData: Sheet = {
   id: '1',
   name: 'Sheet1',
   maxRow: 1000,
-  maxCol: 1000,
+  maxCol: 100000,
   cells: {},
   rowHeight: {
     0: 100,

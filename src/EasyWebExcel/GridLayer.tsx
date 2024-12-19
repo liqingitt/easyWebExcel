@@ -502,6 +502,18 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
       gridLineAreaSize.width - horizontalScrollBarWidth;
 
     /**
+     * 屏幕最大纵向滚动距离
+     */
+    const screenMaxHorizontalScrollDistance =
+      sheetTotalWidth - gridLineAreaSize.width;
+
+    /**
+     * 纵向滚动条最大滚动距离 和 屏幕最大纵向滚动距离 之间的比例
+     */
+    const horizontalScrollBarMaxScrollDistanceRatio =
+      horizontalScrollBarMaxScrollDistance / screenMaxHorizontalScrollDistance;
+
+    /**
      * 横向滚动条最小滚动距离
      */
     const horizontalScrollBarMinScrollDistance = 0;
@@ -510,7 +522,7 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
      * 实际横向滚动距离 转换成 横向滚动条滚动距离
      */
     const horizontalScrollBarScrollDistance =
-      scrollDistance.horizontal * gridLineAreaWidthRatio;
+      scrollDistance.horizontal * horizontalScrollBarMaxScrollDistanceRatio;
 
     return (
       <Rect
@@ -531,7 +543,7 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
           const x = e.currentTarget.x();
           if (x !== horizontalScrollBarScrollDistance) {
             setScrollDistance({
-              horizontal: x / gridLineAreaWidthRatio,
+              horizontal: x / horizontalScrollBarMaxScrollDistanceRatio,
               vertical: scrollDistance.vertical,
             });
           }
@@ -590,6 +602,18 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
       gridLineAreaSize.height - verticalScrollBarWidth;
 
     /**
+     * 屏幕最大纵向滚动距离
+     */
+    const screenMaxVerticalScrollDistance =
+      sheetTotalHeight - gridLineAreaSize.height;
+
+    /**
+     * 纵向滚动条最大滚动距离 和 屏幕最大纵向滚动距离 之间的比例
+     */
+    const verticalScrollBarMaxScrollDistanceRatio =
+      verticalScrollBarMaxScrollDistance / screenMaxVerticalScrollDistance;
+
+    /**
      * 纵向滚动条最小滚动距离
      */
     const verticalScrollBarMinScrollDistance = 0;
@@ -598,7 +622,7 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
      * 实际纵向滚动距离 转换成 纵向滚动条滚动距离
      */
     const verticalScrollBarScrollDistance =
-      scrollDistance.vertical * gridLineAreaHeightRatio;
+      scrollDistance.vertical * verticalScrollBarMaxScrollDistanceRatio;
 
     return (
       <Rect
@@ -620,7 +644,7 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
           if (y !== verticalScrollBarScrollDistance) {
             setScrollDistance({
               horizontal: scrollDistance.horizontal,
-              vertical: y / gridLineAreaHeightRatio,
+              vertical: y / verticalScrollBarMaxScrollDistanceRatio,
             });
           }
         }}
