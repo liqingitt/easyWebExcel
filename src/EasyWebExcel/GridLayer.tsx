@@ -783,12 +783,18 @@ export const GridLayer: React.FC<GridLayerProps> = (props) => {
             const relativeY = clickY - sheet.defaultIndexRowHeight;
 
             //  计算点击的是第几行
-            let rowIndex = Math.floor(
-              (scrollDistance.vertical + relativeY) / sheet.defaultRowHeight,
+            let rowIndex = getScrollRowIndex(
+              scrollDistance.vertical + relativeY,
+              rowPositionRef.current,
+              manualAdjustedRowIndexs,
+              sheet,
             );
             //  计算点击的是第几列
-            let colIndex = Math.floor(
-              (scrollDistance.horizontal + relativeX) / sheet.defaultColWidth,
+            let colIndex = getScrollColIndex(
+              scrollDistance.horizontal + relativeX,
+              colPositionRef.current,
+              manualAdjustedColIndexs,
+              sheet,
             );
             console.log(rowIndex, colIndex);
           }}
